@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
 from .models import Principal
@@ -16,7 +16,13 @@ class AuthenticationApplicationService:
         self._repository = repository
         self._sessions = sessions or AuthenticationService()
 
-    def authenticate(self, organization_id: UUID, login: str, password: str, expires_at: datetime):
+    def authenticate(
+        self,
+        organization_id: UUID,
+        login: str,
+        password: str,
+        expires_at: datetime,
+    ):
         password_hash = self._repository.get_password_hash(organization_id, login)
         if not password_hash or not verify_password(password_hash, password):
             return None
@@ -39,3 +45,10 @@ class AuthenticationApplicationService:
 
     def logout(self, session_id: UUID) -> None:
         self._repository.revoke_session(session_id)
+
+    @staticmethod
+    def validate_expiry(expires_at: datetime) -> None:
+        if expires_at.tzinfo is None:
+            raise ValueError("expires_at must be timezone-aware")
+        if expires_at <= datetime.now(timezone.utc):
+            raise ValueError("expires_at must be in the future")
