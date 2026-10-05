@@ -59,7 +59,7 @@ def upgrade() -> None:
     )
 
     op.create_table(
-        "role_permission",
+        "role_permissions",
         sa.Column("role_id", UUID(as_uuid=True), sa.ForeignKey("role.id", ondelete="CASCADE"), primary_key=True),
         sa.Column("permission_id", UUID(as_uuid=True), sa.ForeignKey("permission.id", ondelete="CASCADE"), primary_key=True),
     )
@@ -85,7 +85,7 @@ def downgrade() -> None:
     op.drop_index("ix_session_user", table_name="session")
     op.drop_index("ix_app_user_org", table_name="app_user")
     op.drop_table("session")
-    op.drop_table("role_permission")
+    op.drop_table("role_permissions")
     op.drop_table("user_role")
     op.drop_table("permission")
     op.drop_table("role")
