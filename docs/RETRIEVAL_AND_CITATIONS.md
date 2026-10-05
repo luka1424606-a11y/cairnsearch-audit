@@ -1,4 +1,4 @@
-# RETRIEVAL AND CITATIONS — v1.0
+# RETRIEVAL AND CITATIONS — v1.1
 
 ## 1. Purpose
 
@@ -159,9 +159,9 @@ Unsupported material claims must not be rendered as supported legal conclusions.
 
 ## 16. Citation generation
 
-Citation service produces deterministic citation objects from evidence metadata.
+Citation service produces deterministic citation objects from evidence provenance.
 
-LLM may select evidence references but must not invent the citation structure.
+LLM may select evidence IDs from the supplied evidence set but must not author authoritative citation metadata.
 
 ## 17. Citation display
 
@@ -191,6 +191,8 @@ If no material claim can be sufficiently supported:
 status = INSUFFICIENT_EVIDENCE / NOT_CONFIRMED.
 
 Do not fill the gap with model prior knowledge.
+
+A streamed provider response is treated as an internal candidate until validation completes. The final answer is user-visible only after claims, citations and output policy have passed.
 
 ## 20. Retrieval evaluation
 
