@@ -1,4 +1,4 @@
-# BUILD SPECIFICATION — target implementation contract v1.0
+# BUILD SPECIFICATION — target implementation contract v1.1
 
 Этот документ предназначен для coding agent после утверждения TARGET_ARCHITECTURE.md.
 
@@ -75,6 +75,8 @@ get_capabilities(...)
 health(...)
 get_usage(...)
 
+Streaming is provider-internal. The application must buffer the final answer until claim validation, citation validation and output policy complete.
+
 ### Agent interface
 handle(request) -> response
 
@@ -138,13 +140,20 @@ The core agent code cannot import a provider SDK directly.
 
 Configuration includes provider/model, but secrets remain outside source.
 
-## 10. Local-only contract
+Provider/model configuration is a privileged administrative operation and must be audited. Connection testing must never transmit document content.
 
-When local-only mode is enabled:
-- external LLM requests are blocked;
-- external embedding requests are blocked;
-- connection-test endpoints cannot probe cloud providers;
-- unexpected external network access should fail closed where technically controllable.
+## 10. Network-mode contract
+
+Network controls are separate for:
+- LLM provider;
+- embedding provider;
+- official-source ingestion;
+- telemetry.
+
+When local-only LLM mode is enabled, external LLM requests are blocked.
+When local-only embedding mode is enabled, external embedding requests are blocked.
+Source ingestion may remain separately permitted because updating an official source can require outbound network access.
+Connection-test endpoints must follow the same network policy and must never send document content.
 
 ## 11. Legal-source publication contract
 
