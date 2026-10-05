@@ -1,0 +1,16 @@
+"""Persistence contract for internal documents."""
+
+from __future__ import annotations
+
+from typing import Protocol
+from uuid import UUID
+
+from .models import Document, DocumentAccess, DocumentVersion
+
+
+class DocumentRepository(Protocol):
+    def get_document(self, organization_id: UUID, document_id: UUID) -> Document | None: ...
+    def get_latest_version(self, document_id: UUID) -> DocumentVersion | None: ...
+    def create_document(self, document: Document) -> None: ...
+    def create_version(self, version: DocumentVersion) -> None: ...
+    def can_read(self, user_id: UUID, organization_id: UUID, document_id: UUID) -> DocumentAccess: ...
