@@ -14,7 +14,7 @@ database_url = os.getenv("CAIRNSEARCH_DATABASE_URL")
 if not database_url:
     raise RuntimeError("CAIRNSEARCH_DATABASE_URL is required for migrations")
 
-config.set_main_option("sqlalchemy.url", database_url)
+sqlalchemy_url = database_url.replace("postgresql://", "postgresql+psycopg://", 1)\nconfig.set_main_option("sqlalchemy.url", sqlalchemy_url)
 
 target_metadata = None
 
