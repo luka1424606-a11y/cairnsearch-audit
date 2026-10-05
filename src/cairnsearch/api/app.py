@@ -24,26 +24,6 @@ folder_watcher: FolderWatcher = None
 index_manager: IndexManager = None
 
 
-def clear_all_data():
-    """Clear all indexed data on startup by removing the entire data directory."""
-    import subprocess
-    import shutil
-    from pathlib import Path
-    
-    try:
-        data_dir = Path.home() / ".local" / "share" / "cairnsearch"
-        
-        logger.info(f"Clearing previous index data on startup: {data_dir}")
-        
-        # Remove the entire directory
-        if data_dir.exists():
-            shutil.rmtree(data_dir)
-            logger.info(f"Removed data directory: {data_dir}")
-        
-        logger.info("Previous index data cleared")
-    except Exception as e:
-        logger.warning(f"Failed to clear data on startup: {e}")
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -52,10 +32,9 @@ async def lifespan(app: FastAPI):
     
     config = get_config()
     
-    # Clear previous data on startup
-    clear_all_data()
-    
-    # Initialize database
+    # Startup must never delete or reset persistent data.
+    # Database initialization/migrations belong to the target platform foundation.
+    # Initialize legacy database services without destructive reset.
     db = Database()
     index_manager = IndexManager(db)
     
