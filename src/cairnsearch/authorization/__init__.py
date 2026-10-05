@@ -1,0 +1,1 @@
+"""Authorization boundary (I2+)."""
