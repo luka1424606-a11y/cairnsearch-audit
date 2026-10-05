@@ -37,14 +37,6 @@ def upgrade() -> None:
         ["resource_type", "resource_id"],
     )
 
-    # pgvector is optional. Retrieval migrations will verify availability
-    # before creating vector storage.
-    bind = op.get_bind()
-    if bind.dialect.name == "postgresql":
-        try:
-            bind.execute(sa.text("CREATE EXTENSION IF NOT EXISTS vector"))
-        except Exception:
-            pass
 
 
 def downgrade() -> None:
