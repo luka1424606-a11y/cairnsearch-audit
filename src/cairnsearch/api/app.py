@@ -27,40 +27,13 @@ index_manager: IndexManager = None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan handler."""
-    global db, worker_pool, folder_watcher, index_manager
-    
-    config = get_config()
-    
-    # Startup must never delete or reset persistent data.
-    # Database initialization/migrations belong to the target platform foundation.
-    # Initialize legacy database services without destructive reset.
-    db = Database()
-    index_manager = IndexManager(db)
-    
-    # Initialize worker pool
-    worker_pool = WorkerPool(
-        num_workers=config.indexer.workers,
-        db=db,
-    )
-    worker_pool.start()
-    
-    # Initialize folder watcher (but don't start auto-watching)
-    # The GUI will control which folders to index
-    folder_watcher = FolderWatcher(
-        on_created=lambda p: worker_pool.submit(p, "index"),
-        on_modified=lambda p: worker_pool.submit(p, "reindex"),
-        on_deleted=lambda p: worker_pool.submit(p, "delete", priority=100),
-        folders=[],  # Empty - GUI will manage folders
-    )
-    # Don't auto-start: folder_watcher.start()
-    
+    """Safe target lifespan.
+
+    Startup must not initialize the legacy SQLite/indexing runtime or mutate
+    persistent data. PostgreSQL lifecycle belongs to the target platform
+    foundation and is intentionally not wired into the legacy routes yet.
+    """
     yield
-    
-    # Cleanup
-    if folder_watcher.is_running:
-        folder_watcher.stop()
-    worker_pool.stop()
 
 
 def create_app() -> FastAPI:
