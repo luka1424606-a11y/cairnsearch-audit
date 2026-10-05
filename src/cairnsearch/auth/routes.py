@@ -1,15 +1,11 @@
-"""Authentication route contracts.
-
-The concrete router is kept separate from application services so HTTP policy
-cannot leak into domain logic.
-"""
+"""Authentication HTTP contracts."""
 
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Response, status
+from fastapi import APIRouter, HTTPException, Request, Response, status
 from pydantic import BaseModel
 
 from .application import AuthenticationApplicationService
@@ -24,35 +20,24 @@ class LoginRequest(BaseModel):
     password: str
 
 
-def login_response(
-    service: AuthenticationApplicationService,
-    response: Response,
-    payload: LoginRequest,
-    ttl: timedelta = timedelta(hours=8),
-):
-    expires_at = datetime.now(timezone.utc) + ttl
+def login_response(service: AuthenticationApplicationService, response: Response, payload: LoginRequest,
+                   ttl: timedelta = timedelta(hours=8)):
     result = service.authenticate(
         payload.organization_id,
         payload.login,
         payload.password,
-        expires_at,
+        datetime.now(timezone.utc) + ttl,
     )
     if result is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials",
-        )
-
-    session_id, token, principal = result
-    set_session_cookie(response, str(session_id))
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+    _, token, principal = result
+    set_session_cookie(response, token)
     return {"user_id": str(principal.user_id), "organization_id": str(principal.organization_id)}
 
 
-def logout_response(
-    service: AuthenticationApplicationService,
-    response: Response,
-    session_id: UUID,
-):
-    service.logout(session_id)
+def logout_response(service: AuthenticationApplicationService, request: Request, response: Response):
+    token = request.cookies.get("cairnsearch_session")
+    if token:
+        service.logout(token)
     clear_session_cookie(response)
     return {"status": "ok"}
