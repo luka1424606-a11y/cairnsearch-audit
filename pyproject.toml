@@ -31,6 +31,10 @@ dependencies = [
     
     # Vector operations
     "numpy>=1.24.0",
+    # Target platform foundation
+    "psycopg[binary]>=3.2.0",
+    "SQLAlchemy>=2.0.0",
+    "alembic>=1.13.0",
 ]
 
 [project.optional-dependencies]
