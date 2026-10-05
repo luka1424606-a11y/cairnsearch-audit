@@ -1,1 +1,1 @@
-"""Internal document boundary (I3+)."""
+"""Internal document domain boundary."""
