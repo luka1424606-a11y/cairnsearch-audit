@@ -1,4 +1,4 @@
-# AGENT SPECIFICATIONS — v1.0
+# AGENT SPECIFICATIONS — v1.1
 
 ## 1. Common contract
 
@@ -141,6 +141,8 @@ Audit stores:
 - request ID.
 
 Production changes create new versions.
+
+Provider/model selection and modification are administrative operations and are not controlled by the LLM.
 
 ## 9. Agent memory
 
