@@ -1,4 +1,4 @@
-# DATA MODEL — целевая модель данных v1.0
+# DATA MODEL — целевая модель данных v1.1
 
 ## 1. Назначение
 
@@ -91,11 +91,13 @@ role_permissions.
 
 Пользователь может иметь несколько ролей только если это явно разрешено политикой организации.
 
-## 8. Document ACL
+## 8. Internal-document ACL
 
-document_access:
+Для чувствительных документов организации используется отдельная таблица `internal_document_access`.
+
+internal_document_access:
 - id
-- document_id
+- internal_document_id
 - subject_type
 - subject_id
 - permission
@@ -110,7 +112,7 @@ subject_type:
 
 Default deny.
 
-Приоритеты конфликтующих правил должны быть формализованы до реализации.
+Не использовать один полиморфный `document_id` как внешний ключ сразу на разные таблицы документов.
 
 ## 9. LegalDocument
 
@@ -277,13 +279,8 @@ processing_job:
 evidence:
 - id
 - source_type
-- official_source_id nullable
-- legal_document_id nullable
-- legal_version_id nullable
 - legal_provision_id nullable
-- internal_document_id nullable
 - internal_document_version_id nullable
-- chunk_id nullable
 - text
 - locator_json
 - temporal_validity
@@ -291,21 +288,31 @@ evidence:
 - retrieval_metadata_json
 - created_at
 
-Exactly one valid source lineage must be resolvable for each evidence item.
+Invariant:
+exactly one of legal_provision_id or internal_document_version_id is set.
+
+Official source, legal document and legal version are resolved transitively for legal evidence; they are not duplicated as competing foreign keys on evidence.
 
 ## 19. Embedding
+
+embedding_generation:
+- id
+- provider
+- model_name
+- model_version nullable
+- vector_dimension
+- status
+- created_at
+- retired_at nullable
 
 embedding:
 - id
 - evidence_id
-- model_provider
-- model_name
-- model_version nullable
+- generation_id
 - vector
-- vector_dimension
 - created_at
 
-Embedding rows are dependent on their evidence parent.
+An embedding belongs to exactly one generation. Re-embedding creates a new generation and never silently changes the meaning of the old vectors.
 
 ## 20. Citation
 
@@ -404,13 +411,18 @@ Critical DB constraints:
 
 ## 26. Transaction boundaries
 
-Publication of a legal version should be transactional for:
+Publication of a legal version is transactional for:
 - version;
 - provisions;
 - publication status;
 - searchable metadata.
 
-Embedding/index creation can be asynchronous, but publication status must not claim searchable completeness until required indexing completes.
+Embedding/index creation may be asynchronous. The system must distinguish:
+- legally published;
+- structurally indexed;
+- vector-indexed.
+
+A legal version must not be presented as fully searchable until the required retrieval indexes are ready.
 
 ## 27. Deletion rules
 
