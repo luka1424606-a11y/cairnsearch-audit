@@ -1,6 +1,6 @@
 # Target Architecture — корпоративная система ИИ-агентов для Республики Беларусь
 
-Статус: целевая архитектура v1.0
+Статус: целевая архитектура v1.1
 Ветка: architecture/target-v1
 Назначение: основной технический документ для последующей реализации системы.
 
@@ -461,17 +461,22 @@ EvidenceCandidate:
 
 Evidence — первичный объект, с которым работает агент.
 
-Содержит:
-- источник;
-- документ;
-- редакцию;
-- норму;
-- период действия;
-- текст;
+Каждый Evidence имеет ровно одну каноническую линию происхождения:
+- LEGAL_PROVISION; или
+- INTERNAL_DOCUMENT_VERSION.
+
+Для legal evidence источник и snapshot достигаются через legal provision → legal version → source snapshot.
+Для internal evidence происхождение достигается через internal document version → file object.
+
+Evidence содержит:
+- canonical evidence id;
+- source type;
+- provenance identifiers;
+- text;
 - locator;
-- страницу/область, если доступны;
+- temporal applicability;
 - retrieval scores;
-- проверку доступа.
+- access verification.
 
 Агент получает только authorized evidence.
 
