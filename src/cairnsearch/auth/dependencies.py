@@ -12,17 +12,10 @@ def authenticated_principal(
     request: Request,
     auth_service: AuthenticationApplicationService = Depends(),
 ):
-    raw = request.cookies.get(SESSION_COOKIE)
-    if not raw:
+    token = request.cookies.get(SESSION_COOKIE)
+    if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
-
-    try:
-        from uuid import UUID
-        session_id = UUID(raw)
-    except ValueError as exc:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required") from exc
-
-    principal = auth_service.principal_from_session(session_id)
+    principal = auth_service.principal_from_token(token)
     if principal is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
     return principal
