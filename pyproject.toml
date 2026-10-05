@@ -60,3 +60,9 @@ where = ["src"]
 
 [tool.setuptools.package-dir]
 "" = "src"
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: requires a real disposable PostgreSQL database",
+    "target: tests for the target architecture",
+]
