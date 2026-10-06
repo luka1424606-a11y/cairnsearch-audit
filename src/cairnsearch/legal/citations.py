@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass
 from uuid import UUID, uuid4
 
-from .models import LegalProvision, LegalVersion, SourceSnapshot
+from .models import LegalProvision, LegalVersion, SourceSnapshot, VerificationStatus
 
 
 @dataclass(frozen=True)
@@ -26,6 +27,8 @@ def build_citation(
     provision: LegalProvision,
     snapshot: SourceSnapshot,
 ) -> LegalCitation:
+    if version.verification_status != VerificationStatus.VERIFIED:
+        raise ValueError("only VERIFIED legal versions can be cited")
     if version.id != provision.legal_version_id:
         raise ValueError("provision does not belong to legal version")
     if snapshot.legal_version_id != version.id:
@@ -50,6 +53,10 @@ def build_citation(
     )
 
 
+def format_citation(citation: LegalCitation) -> str:
+    """Stable machine-readable citation label for answer generation."""
+    return f"[{citation.citation_key} | {citation.locator} | text_sha256={citation.text_sha256}]"
+
+
 def _sha256_text(value: str) -> str:
-    import hashlib
     return hashlib.sha256(value.encode("utf-8")).hexdigest()
