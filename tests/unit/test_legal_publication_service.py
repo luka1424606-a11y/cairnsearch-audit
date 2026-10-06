@@ -33,7 +33,7 @@ def draft():
 def test_service_delegates_atomic_publication():
     repo = FakeRepository()
     service = LegalPublicationService(repo)
-    value = service.publish(draft(), source_url="https://pravo.by/document")
+    value = service.publish(draft())
     assert value == repo.draft.version.id
     assert repo.source_url.endswith("/document")
 
@@ -48,5 +48,4 @@ def test_service_rejects_already_verified_draft():
     with pytest.raises(ValueError):
         LegalPublicationService(FakeRepository()).publish(
             type(d)(version=verified, provisions=d.provisions),
-            source_url="https://pravo.by/document",
         )
