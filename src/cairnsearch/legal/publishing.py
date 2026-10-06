@@ -1,9 +1,4 @@
-"""Controlled publication workflow for Belarus legal versions.
-
-Publication is explicit: capture source -> validate integrity -> create provisions
--> verify -> publish. Once VERIFIED, database triggers make the version and its
-provisions immutable.
-"""
+"""Controlled publication workflow for Belarus legal versions."""
 
 from __future__ import annotations
 
@@ -28,6 +23,8 @@ class ProvisionInput:
 class PublicationDraft:
     version: LegalVersion
     provisions: tuple[LegalProvision, ...]
+    source_content: bytes
+    source_url: str
 
 
 def sha256_text(value: str) -> str:
@@ -81,7 +78,6 @@ def build_publication_draft(
         effective_to=effective_to,
         verification_status=VerificationStatus.UNVERIFIED,
     )
-
     built = tuple(
         LegalProvision(
             id=uuid4(),
@@ -94,4 +90,9 @@ def build_publication_draft(
         )
         for p in ordered
     )
-    return PublicationDraft(version=version, provisions=built)
+    return PublicationDraft(
+        version=version,
+        provisions=built,
+        source_content=source_content,
+        source_url=source_url,
+    )
