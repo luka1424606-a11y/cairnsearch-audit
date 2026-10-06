@@ -36,30 +36,55 @@ ROLE_PERMISSIONS = {
     "EMPLOYEE": ("auth.login", "auth.logout", "documents.read"),
 }
 
-def upgrade():
-    role = sa.table("role", sa.column("id", sa.UUID()), sa.column("code", sa.String()))
-    permission = sa.table("permission", sa.column("id", sa.UUID()), sa.column("code", sa.String()))
-    role_permissions = sa.table("role_permissions", sa.column("role_id", sa.UUID()), sa.column("permission_id", sa.UUID()))
 
+def upgrade():
     for code, rid in ROLES.items():
-        op.execute(sa.text("INSERT INTO role (id, code, name) VALUES (:id, :code, :name) ON CONFLICT (code) DO NOTHING")
-                   .bindparams(id=rid, code=code, name=code))
+        op.execute(
+            sa.text("""
+                INSERT INTO role (id, code, name)
+                VALUES (:id, :code, :name)
+                ON CONFLICT (code) DO NOTHING
+            """).bindparams(id=rid, code=code, name=code)
+        )
+
     for code, pid in PERMISSIONS.items():
-        op.execute(sa.text("INSERT INTO permission (id, code, name) VALUES (:id, :code, :name) ON CONFLICT (code) DO NOTHING")
-                   .bindparams(id=pid, code=code, name=code))
+        op.execute(
+            sa.text("""
+                INSERT INTO permission (id, code, description)
+                VALUES (:id, :code, :description)
+                ON CONFLICT (code) DO NOTHING
+            """).bindparams(id=pid, code=code, description=code)
+        )
 
     for role_code, permission_codes in ROLE_PERMISSIONS.items():
         for permission_code in permission_codes:
-            op.execute(sa.text("""
-                INSERT INTO role_permissions (role_id, permission_id)
-                SELECT r.id, p.id FROM role r, permission p
-                WHERE r.code=:role_code AND p.code=:permission_code
-                ON CONFLICT DO NOTHING
-            """).bindparams(role_code=role_code, permission_code=permission_code))
+            op.execute(
+                sa.text("""
+                    INSERT INTO role_permissions (role_id, permission_id)
+                    SELECT r.id, p.id
+                    FROM role r CROSS JOIN permission p
+                    WHERE r.code=:role_code AND p.code=:permission_code
+                    ON CONFLICT DO NOTHING
+                """).bindparams(
+                    role_code=role_code,
+                    permission_code=permission_code,
+                )
+            )
+
 
 def downgrade():
-    op.execute(sa.text("DELETE FROM role_permissions"))
-    op.execute(sa.text("DELETE FROM permission WHERE id IN (:ids)")
-               .bindparams(ids=list(PERMISSIONS.values())))
-    op.execute(sa.text("DELETE FROM role WHERE id IN (:ids)")
-               .bindparams(ids=list(ROLES.values())))
+    for role_code in ROLES:
+        op.execute(
+            sa.text("""
+                DELETE FROM role_permissions
+                WHERE role_id=(SELECT id FROM role WHERE code=:role_code)
+            """).bindparams(role_code=role_code)
+        )
+    for code in PERMISSIONS:
+        op.execute(
+            sa.text("DELETE FROM permission WHERE code=:code").bindparams(code=code)
+        )
+    for code in ROLES:
+        op.execute(
+            sa.text("DELETE FROM role WHERE code=:code").bindparams(code=code)
+        )
