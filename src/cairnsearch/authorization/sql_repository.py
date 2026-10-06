@@ -16,7 +16,7 @@ class PostgresAuthorizationRepository:
                 SELECT DISTINCT p.code
                 FROM app_user u
                 JOIN user_role ur ON ur.user_id = u.id
-                JOIN role_permission rp ON rp.role_id = ur.role_id
+                JOIN role_permissions rp ON rp.role_id = ur.role_id
                 JOIN permission p ON p.id = rp.permission_id
                 WHERE u.id = %s
                   AND u.organization_id = %s
