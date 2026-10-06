@@ -1,55 +1,22 @@
-"""HTTP session authentication helpers."""
+"""HTTP session authentication helpers.
+
+The cookie contains only the opaque session token. Server-side repositories
+resolve its hash to the authenticated principal.
+"""
 
 from __future__ import annotations
-
-from uuid import UUID
 
 from fastapi import HTTPException, Request, status
 
 from .application import AuthenticationApplicationService
+from .dependencies import SESSION_COOKIE
 
-SESSION_COOKIE = "cairnsearch_session"
 
-
-def require_principal(
-    request: Request,
-    auth_service: AuthenticationApplicationService,
-):
-    raw = request.cookies.get(SESSION_COOKIE)
-    if not raw:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required",
-        )
-
-    try:
-        session_id = UUID(raw)
-    except ValueError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required",
-        ) from exc
-
-    principal = auth_service.principal_from_session(session_id)
+def require_principal(request: Request, auth_service: AuthenticationApplicationService):
+    token = request.cookies.get(SESSION_COOKIE)
+    if not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
+    principal = auth_service.principal_from_token(token)
     if principal is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required",
-        )
-    return principal
-
-
-def require_permission(principal, authorization_service, permission: str, permission_codes):
-    from cairnsearch.authorization.service import AuthorizationContext
-
-    context = AuthorizationContext(
-        user_id=principal.user_id,
-        organization_id=principal.organization_id,
-        permission_codes=frozenset(permission_codes),
-    )
-    if not authorization_service.check_user_permission(context, permission):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Forbidden",
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
     return principal
