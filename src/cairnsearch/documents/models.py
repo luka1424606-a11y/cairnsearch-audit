@@ -14,6 +14,7 @@ class Document:
     title: str
     document_type: str
     status: str
+    created_by: UUID
 
 
 @dataclass(frozen=True)
