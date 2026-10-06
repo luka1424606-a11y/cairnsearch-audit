@@ -1,4 +1,4 @@
-"""Persistence contract for legal publication workflow."""
+"""Persistence contract for the controlled legal publication workflow."""
 
 from __future__ import annotations
 
@@ -6,10 +6,10 @@ from typing import Protocol
 from uuid import UUID
 
 from .models import LegalProvision, LegalVersion
+from .publishing import PublicationDraft
 
 
 class LegalPublicationRepository(Protocol):
-    def insert_unverified_version(self, version: LegalVersion, source_url: str, source_content: bytes) -> UUID: ...
-    def insert_provisions(self, provisions: tuple[LegalProvision, ...]) -> None: ...
-    def verify_version(self, version_id: UUID) -> None: ...
+    def publish(self, draft: PublicationDraft, *, source_url: str) -> UUID: ...
     def get_version(self, version_id: UUID) -> LegalVersion | None: ...
+    def get_provision(self, version_id: UUID, locator: str) -> LegalProvision | None: ...
