@@ -44,8 +44,12 @@ class DocumentApplicationService:
             uuid4(), document.id, next_no, storage_key, digest,
             mime_type or "application/octet-stream", len(content), datetime.now(timezone.utc),
         )
-        self._repository.create_version(version, actor_user_id)
-        self._repository.record_audit(document.id, version.id, actor_user_id, "VERSION_CREATED")
+        try:
+            self._repository.create_version(version, actor_user_id)
+            self._repository.record_audit(document.id, version.id, actor_user_id, "VERSION_CREATED")
+        except Exception:
+            self._storage.delete(storage_key)
+            raise
         return UploadedVersion(version, storage_key)
 
     def grant_read(self, document_id: UUID, role_id: UUID, actor_user_id: UUID) -> None:
