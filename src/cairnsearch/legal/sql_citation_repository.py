@@ -22,12 +22,7 @@ class PostgresLegalCitationRepository(LegalCitationRepository):
                     (id, legal_version_id, provision_id, source_snapshot_id,
                      citation_key, locator, text_sha256, snapshot_sha256)
                     VALUES (:id,:version_id,:provision_id,:snapshot_id,
-                            :citation_key,:locator,:text_sha256,:snapshot_sha256)
-                    ON CONFLICT (legal_version_id, provision_id) DO UPDATE SET
-                      citation_key=EXCLUDED.citation_key,
-                      locator=EXCLUDED.locator,
-                      text_sha256=EXCLUDED.text_sha256,
-                      snapshot_sha256=EXCLUDED.snapshot_sha256"""),
+                            :citation_key,:locator,:text_sha256,:snapshot_sha256)"""),
                 {
                     "id": citation.id,
                     "version_id": citation.legal_version_id,
